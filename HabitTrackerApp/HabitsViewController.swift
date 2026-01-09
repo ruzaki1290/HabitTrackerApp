@@ -14,7 +14,7 @@ class HabitsViewController: UIViewController {
 
         view.backgroundColor = .systemBackground
         
-        title = "Сегодня"
+        title = "Привычки"
         navigationController?.navigationBar.prefersLargeTitles = true
         navigationItem.largeTitleDisplayMode = .always
     }
