@@ -11,14 +11,14 @@ final class ProgressCell: UITableViewCell {
     
     static let reuseID = "ProgressCell"
     
-// MARK: - UI
+    // MARK: - UI
     
     private let cardView = UIView()
       private let titleLabel = UILabel()
       private let percentLabel = UILabel()
       private let progressView = UIProgressView(progressViewStyle: .default)
 
-// MARK: - Init
+    // MARK: - Init
     
     override init(style: UITableViewCell.CellStyle, reuseIdentifier: String?) {
         
@@ -32,7 +32,7 @@ final class ProgressCell: UITableViewCell {
             
         }
     
-// MARK: - Public
+    // MARK: - Public
     
     func configure(title: String, progress: Float) {
         
@@ -42,7 +42,7 @@ final class ProgressCell: UITableViewCell {
         
         }
 
-// MARK: - Setup
+    // MARK: - Setup
     
     private func setupUI() {
         
