@@ -131,11 +131,9 @@ extension HabitsViewController: UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
 
         guard let section = Section(rawValue: indexPath.section) else {
-            return tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
+            return UITableViewCell()
         }
 
         switch section {
@@ -165,15 +163,15 @@ extension HabitsViewController: UITableViewDataSource {
 
 extension HabitsViewController: UITableViewDelegate {
     
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        guard let section = Section(rawValue: indexPath.section) else { return 44 }
         
-        tableView.deselectRow(at: indexPath, animated: true)
-
-        guard let section = Section(rawValue: indexPath.section) else { return }
-        if section == .habits {
-            print("Tapped habit:", habits[indexPath.row])
+        switch section {
+        case .progress: return 80
+        case .habits: return 44
         }
         
     }
-    
+        
 }
+    
