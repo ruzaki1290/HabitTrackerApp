@@ -88,8 +88,8 @@ final class HabitsViewController: UIViewController {
         tableView.dataSource = self
         tableView.delegate = self
         
+        tableView.register(ProgressCell.self, forCellReuseIdentifier: ProgressCell.reuseID)
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
-        tableView.separatorStyle = .singleLine
         
     }
     
@@ -131,24 +131,31 @@ extension HabitsViewController: UITableViewDataSource {
     }
 
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
-        
-        let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
 
-        guard let section = Section(rawValue: indexPath.section) else { return cell }
-
-        switch section {
-        case .progress:
-            cell.textLabel?.text = "Прогресс (пока заглушка)"
-            cell.selectionStyle = .none
-
-        case .habits:
-            cell.textLabel?.text = habits[indexPath.row]
-            cell.selectionStyle = .default
+        guard let section = Section(rawValue: indexPath.section) else {
+            return UITableViewCell()
         }
 
-        return cell
+        switch section {
+            
+        case .progress:
+            let cell = tableView.dequeueReusableCell(
+                withIdentifier: ProgressCell.reuseID,
+                for: indexPath
+            ) as! ProgressCell
+            
+            cell.configure(title: "Всё получится!", progress: 0.5)
+            return cell
+
+        case .habits:
+            let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
+            cell.textLabel?.text = habits[indexPath.row]
+            cell.selectionStyle = .default
+            return cell
+            
+        }
         
-    }
+    } // tableView
     
 } //UITableViewDataSource
     
@@ -156,13 +163,15 @@ extension HabitsViewController: UITableViewDataSource {
 
 extension HabitsViewController: UITableViewDelegate {
     
-    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-            tableView.deselectRow(at: indexPath, animated: true)
-
-            guard let section = Section(rawValue: indexPath.section) else { return }
-            guard section == .habits else { return }
-
-            print("Tapped habit:", habits[indexPath.row])
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        guard let section = Section(rawValue: indexPath.section) else { return 44 }
+        
+        switch section {
+        case .progress: return 80
+        case .habits: return 44
         }
-    
+        
+    }
+        
 }
+    
