@@ -23,7 +23,7 @@ final class HabitsViewController: UIViewController {
     
     // MARK: - Data
     
-    private let habits: [String] = [
+    private var habits: [String] = [
         "Выпить стакан воды",
         "Сделать зарядку",
         "Сходить в душ",
@@ -98,6 +98,16 @@ final class HabitsViewController: UIViewController {
     @objc private func addHabitTapped() {
         
         let vc = CreateHabitViewController()
+        
+        vc.onSave = { [weak self] title in
+                guard let self else { return }
+
+                self.habits.append(title)
+
+                self.tableView.reloadData()
+            }
+
+        
             let nav = UINavigationController(rootViewController: vc)
             present(nav, animated: true)
         
