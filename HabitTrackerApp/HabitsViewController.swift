@@ -97,12 +97,9 @@ final class HabitsViewController: UIViewController {
     
     @objc private func addHabitTapped() {
         
-        let alert = UIAlertController(title: "Добавить привычку",
-                                      message: "Скоро тут будет экран создания привычки 🙂",
-                                      preferredStyle: .alert)
-        
-        alert.addAction(UIAlertAction(title: "Ок", style: .default))
-        present(alert, animated: true)
+        let vc = CreateHabitViewController()
+            let nav = UINavigationController(rootViewController: vc)
+            present(nav, animated: true)
         
     }
     
