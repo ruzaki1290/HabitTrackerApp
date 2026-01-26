@@ -23,21 +23,7 @@ final class HabitsViewController: UIViewController {
     
     // MARK: - Data
     
-    private var habits: [String] = [
-        "Выпить стакан воды",
-        "Сделать зарядку",
-        "Сходить в душ",
-        "Почистить зубы",
-        "Позавтракать",
-        "Поработать над проектом Нетологии",
-        "Пообедать",
-        "Закончить работу над проектом Нетологии",
-        "Поужинать",
-        "Принять душ",
-        "Почистить зубы",
-        "Почитать книгу",
-        "Лечь спать"
-    ]
+    private var habits: [String] = []
     
     // MARK: - Lifecycle
     
@@ -48,8 +34,48 @@ final class HabitsViewController: UIViewController {
         setupUI()
         setupTableView()
         
+        habits = HabitsStorage.shared.load()
+        
+        if habits.isEmpty {
+            
+            habits = [
+                "Выпить стакан воды",
+                "Сделать зарядку",
+                "Сходить в душ",
+                "Почистить зубы",
+                "Позавтракать",
+                "Поработать над проектом Нетологии",
+                "Пообедать",
+                "Закончить работу над проектом Нетологии",
+                "Поужинать",
+                "Принять душ",
+                "Почистить зубы",
+                "Почитать книгу",
+                "Лечь спать"
+            ]
+            
+            // Сохраняет добавленные привычки в storage при первом запуске
+            // HabitsStorage.shared.save(habits)
+            
+        }
+        
         
     } // viewDidLoad()
+    
+    // MARK: - Save & Delete habbits
+    
+        func tableView(_ tableView: UITableView,
+                   commit editingStyle: UITableViewCell.EditingStyle,
+                   forRowAt indexPath: IndexPath) {
+
+        guard editingStyle == .delete else { return }
+        guard indexPath.section == Section.habits.rawValue else { return }
+
+        habits.remove(at: indexPath.row)
+        HabitsStorage.shared.save(habits)
+        tableView.deleteRows(at: [indexPath], with: .automatic)
+    }
+
     
     // MARK: - Setup
     
@@ -103,6 +129,8 @@ final class HabitsViewController: UIViewController {
                 guard let self else { return }
 
                 self.habits.append(title)
+                // Сохраняет привычки при повторном запуске
+                HabitsStorage.shared.save(self.habits)
 
                 self.tableView.reloadData()
             }
