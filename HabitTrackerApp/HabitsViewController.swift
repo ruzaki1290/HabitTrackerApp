@@ -154,8 +154,10 @@ extension HabitsViewController: UITableViewDataSource {
 
         case .habits:
             let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-            let habit = habits[indexPath.row]
+            let habit = HabitsStore.shared.habits[indexPath.row]
             cell.textLabel?.text = habit.name
+            cell.accessoryType = habit.isAlreadyTakenToday ? .checkmark : .none
+            cell.selectionStyle = .default
             return cell
             
         }
@@ -197,15 +199,19 @@ extension HabitsViewController: UITableViewDelegate {
     func tableView(_ tableView: UITableView,
                    didSelectRowAt indexPath: IndexPath) {
 
+        defer { tableView.deselectRow(at: indexPath, animated: true) }
+
         guard indexPath.section == Section.habits.rawValue else { return }
 
         let habit = HabitsStore.shared.habits[indexPath.row]
-        let vc = HabitDetailsViewController(habit: habit)
-
-        navigationController?.pushViewController(vc, animated: true)
+        HabitsStore.shared.toggleTrackToday(habit)
+        tableView.reloadRows(at: [indexPath], with: .automatic)
+        
+        let progressIndexPath = IndexPath(row: 0, section: Section.progress.rawValue)
+        tableView.reloadRows(at: [progressIndexPath], with: .none)
         
         tableView.deselectRow(at: indexPath, animated: true)
-
+        
     }
-    
+
 }

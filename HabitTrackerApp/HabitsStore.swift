@@ -153,6 +153,20 @@ public final class HabitsStore {
         save()
     }
     
+    /// Убирает отметку "сделано сегодня" (если была) или ставит её (если не было).
+    public func toggleTrackToday(_ habit: Habit) {
+        if habit.isAlreadyTakenToday {
+            // удалить "сегодня" из trackDates
+            habit.trackDates.removeAll { trackDate in
+                calendar.isDateInToday(trackDate)
+            }
+            save()
+        } else {
+            track(habit)
+        }
+    }
+
+    
     /// Возвращает отформатированное время для даты.
     /// - Parameter index: Индекс в массиве dates.
     public func trackDateString(forIndex index: Int) -> String? {
