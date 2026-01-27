@@ -22,9 +22,11 @@ final class HabitsViewController: UIViewController {
     
     
     // MARK: - Data
-    
-    private var habits: [String] = []
-    
+    private var habits: [Habit] {
+        HabitsStore.shared.habits
+    }
+
+        
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
@@ -34,48 +36,8 @@ final class HabitsViewController: UIViewController {
         setupUI()
         setupTableView()
         
-        habits = HabitsStorage.shared.load()
-        
-        if habits.isEmpty {
-            
-            habits = [
-                "Выпить стакан воды",
-                "Сделать зарядку",
-                "Сходить в душ",
-                "Почистить зубы",
-                "Позавтракать",
-                "Поработать над проектом Нетологии",
-                "Пообедать",
-                "Закончить работу над проектом Нетологии",
-                "Поужинать",
-                "Принять душ",
-                "Почистить зубы",
-                "Почитать книгу",
-                "Лечь спать"
-            ]
-            
-            // Сохраняет добавленные привычки в storage при первом запуске
-            // HabitsStorage.shared.save(habits)
-            
-        }
-        
-        
     } // viewDidLoad()
     
-    // MARK: - Save & Delete habbits
-    
-        func tableView(_ tableView: UITableView,
-                   commit editingStyle: UITableViewCell.EditingStyle,
-                   forRowAt indexPath: IndexPath) {
-
-        guard editingStyle == .delete else { return }
-        guard indexPath.section == Section.habits.rawValue else { return }
-
-        habits.remove(at: indexPath.row)
-        HabitsStorage.shared.save(habits)
-        tableView.deleteRows(at: [indexPath], with: .automatic)
-    }
-
     
     // MARK: - Setup
     
@@ -127,12 +89,15 @@ final class HabitsViewController: UIViewController {
         
         vc.onSave = { [weak self] title in
                 guard let self else { return }
+            
+                let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard !trimmed.isEmpty else { return }
 
-                self.habits.append(title)
-                // Сохраняет привычки при повторном запуске
-                HabitsStorage.shared.save(self.habits)
+                let habit = Habit(name: trimmed, date: Date(), color: .systemBlue)
+                HabitsStore.shared.habits.append(habit)
 
                 self.tableView.reloadData()
+                self.dismiss(animated: true)
             }
 
         
@@ -144,7 +109,7 @@ final class HabitsViewController: UIViewController {
     
 } // class HabitsViewController
 
-// MARK: - UITableViewDataSource
+// MARK: - UITableViewDataSource(DATA)
     
 extension HabitsViewController: UITableViewDataSource {
 
@@ -152,6 +117,8 @@ extension HabitsViewController: UITableViewDataSource {
         Section.allCases.count
     }
 
+    // MARK: - numberOfRowsInSection/Creates Rows of Cells
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         
         guard let section = Section(rawValue: section) else { return 0 }
@@ -165,6 +132,8 @@ extension HabitsViewController: UITableViewDataSource {
         
     }
 
+    // MARK: - cellForRowAt/Creates Cells
+    
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 
         guard let section = Section(rawValue: indexPath.section) else {
@@ -179,18 +148,31 @@ extension HabitsViewController: UITableViewDataSource {
                 for: indexPath
             ) as! ProgressCell
             
-            cell.configure(title: "Всё получится!", progress: 0.5)
+            cell.configure(title: "Всё получится!", progress: HabitsStore.shared.todayProgress)
             return cell
 
         case .habits:
             let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-            cell.textLabel?.text = habits[indexPath.row]
-            cell.selectionStyle = .default
+            let habit = habits[indexPath.row]
+            cell.textLabel?.text = habit.name
             return cell
             
         }
         
     } // tableView
+    
+    // MARK: - commit editingStyle/ Save & Delete Cells
+    
+    func tableView(_ tableView: UITableView,
+                   commit editingStyle: UITableViewCell.EditingStyle,
+                   forRowAt indexPath: IndexPath) {
+
+        guard editingStyle == .delete else { return }
+        guard indexPath.section == Section.habits.rawValue else { return }
+
+        HabitsStore.shared.habits.remove(at: indexPath.row)
+        tableView.deleteRows(at: [indexPath], with: .automatic)
+    }
     
 } //UITableViewDataSource
     
@@ -207,6 +189,6 @@ extension HabitsViewController: UITableViewDelegate {
         }
         
     }
-        
-}
+
+} // UITableViewDelegate
     
