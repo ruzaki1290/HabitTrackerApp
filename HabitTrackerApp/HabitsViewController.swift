@@ -109,18 +109,19 @@ final class HabitsViewController: UIViewController {
     
 } // class HabitsViewController
 
-// MARK: - UITableViewDataSource(DATA)
+
+// MARK: - DataSource(ДАННЫЕ)
     
 extension HabitsViewController: UITableViewDataSource {
 
+    // MARK: Sections
     func numberOfSections(in tableView: UITableView) -> Int {
         Section.allCases.count
+        
     }
 
-    // MARK: - numberOfRowsInSection/Creates Rows of Cells
-    
+    // MARK: Rows count
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        
         guard let section = Section(rawValue: section) else { return 0 }
 
         switch section {
@@ -176,19 +177,35 @@ extension HabitsViewController: UITableViewDataSource {
     
 } //UITableViewDataSource
     
-// MARK: - UITableViewDelegate
+// MARK: - Delegate(ПОВЕДЕНИЕ)
 
 extension HabitsViewController: UITableViewDelegate {
-    
-    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+
+    func tableView(_ tableView: UITableView,
+                   heightForRowAt indexPath: IndexPath) -> CGFloat {
         guard let section = Section(rawValue: indexPath.section) else { return 44 }
-        
-        switch section {
-        case .progress: return 80
-        case .habits: return 44
-        }
+
+            switch section {
+            case .progress:
+                return 80
+            case .habits:
+                return 44
+            }
         
     }
 
-} // UITableViewDelegate
+    func tableView(_ tableView: UITableView,
+                   didSelectRowAt indexPath: IndexPath) {
+
+        guard indexPath.section == Section.habits.rawValue else { return }
+
+        let habit = HabitsStore.shared.habits[indexPath.row]
+        let vc = HabitDetailsViewController(habit: habit)
+
+        navigationController?.pushViewController(vc, animated: true)
+        
+        tableView.deselectRow(at: indexPath, animated: true)
+
+    }
     
+}
