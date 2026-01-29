@@ -34,7 +34,17 @@ final class HabitsViewController: UIViewController {
         
         setupNavigation()
         setupUI()
-        setupTableView()
+
+        tableView.dataSource = self
+        tableView.delegate = self
+
+        tableView.register(ProgressCell.self, forCellReuseIdentifier: ProgressCell.reuseID)
+        tableView.register(HabitCell.self, forCellReuseIdentifier: HabitCell.reuseID)
+
+        tableView.separatorStyle = .none
+        tableView.backgroundColor = .systemGroupedBackground
+        tableView.rowHeight = UITableView.automaticDimension
+        tableView.estimatedRowHeight = 130
         
     } // viewDidLoad()
     
@@ -71,16 +81,6 @@ final class HabitsViewController: UIViewController {
         
     } // setupUI()
     
-    private func setupTableView() {
-        
-        tableView.dataSource = self
-        tableView.delegate = self
-        
-        tableView.register(ProgressCell.self, forCellReuseIdentifier: ProgressCell.reuseID)
-        tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
-        
-    }
-    
     // MARK: - Actions
     
     @objc private func addHabitTapped() {
@@ -106,7 +106,6 @@ final class HabitsViewController: UIViewController {
         
     }
     
-    
 } // class HabitsViewController
 
 
@@ -114,27 +113,6 @@ final class HabitsViewController: UIViewController {
     
 extension HabitsViewController: UITableViewDataSource {
 
-    // MARK: Sections
-    func numberOfSections(in tableView: UITableView) -> Int {
-        Section.allCases.count
-        
-    }
-
-    // MARK: Rows count
-    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        guard let section = Section(rawValue: section) else { return 0 }
-
-        switch section {
-        case .progress:
-            return 1
-        case .habits:
-            return habits.count
-        }
-        
-    }
-
-    // MARK: - cellForRowAt/Creates Cells
-    
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
 
         guard let section = Section(rawValue: indexPath.section) else {
@@ -142,76 +120,103 @@ extension HabitsViewController: UITableViewDataSource {
         }
 
         switch section {
-            
         case .progress:
             let cell = tableView.dequeueReusableCell(
                 withIdentifier: ProgressCell.reuseID,
                 for: indexPath
             ) as! ProgressCell
-            
+
             cell.configure(title: "Всё получится!", progress: HabitsStore.shared.todayProgress)
             return cell
 
         case .habits:
-            let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
+            let cell = tableView.dequeueReusableCell(
+                withIdentifier: HabitCell.reuseID,
+                for: indexPath
+            ) as! HabitCell
+
             let habit = HabitsStore.shared.habits[indexPath.row]
-            cell.textLabel?.text = habit.name
-            cell.accessoryType = habit.isAlreadyTakenToday ? .checkmark : .none
-            cell.selectionStyle = .default
+            cell.configure(with: habit)
+
+            cell.onCheckTapped = { [weak self] in
+                guard let self else { return }
+
+                HabitsStore.shared.toggleTrackToday(habit)
+
+                // прогресс
+                self.tableView.reloadRows(
+                    at: [IndexPath(row: 0, section: Section.progress.rawValue)],
+                    with: .none
+                )
+
+                // конкретная привычка (на случай если индекс сдвинется из-за reuse)
+                if let row = HabitsStore.shared.habits.firstIndex(where: { $0 === habit }) {
+                    self.tableView.reloadRows(
+                        at: [IndexPath(row: row, section: Section.habits.rawValue)],
+                        with: .none
+                    )
+                }
+            }
+
             return cell
-            
+
+
+        }
+    }
+
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        guard let section = Section(rawValue: section) else { return 0 }
+
+        switch section {
+        case .progress:
+            return 1
+        case .habits:
+            return HabitsStore.shared.habits.count
         }
         
-    } // tableView
-    
-    // MARK: - commit editingStyle/ Save & Delete Cells
-    
-    func tableView(_ tableView: UITableView,
-                   commit editingStyle: UITableViewCell.EditingStyle,
-                   forRowAt indexPath: IndexPath) {
+    }
 
-        guard editingStyle == .delete else { return }
-        guard indexPath.section == Section.habits.rawValue else { return }
-
-        HabitsStore.shared.habits.remove(at: indexPath.row)
-        tableView.deleteRows(at: [indexPath], with: .automatic)
+    func numberOfSections(in tableView: UITableView) -> Int {
+        return Section.allCases.count
     }
     
-} //UITableViewDataSource
+    @objc private func toggleHabit(_ sender: UIButton) {
+        let habit = HabitsStore.shared.habits[sender.tag]
+        HabitsStore.shared.toggleTrackToday(habit)
+
+        // обновляем прогресс (строка 0 в секции progress)
+        tableView.reloadRows(at: [IndexPath(row: 0, section: Section.progress.rawValue)], with: .none)
+
+        // обновляем конкретную привычку
+        tableView.reloadRows(at: [IndexPath(row: sender.tag, section: Section.habits.rawValue)], with: .none)
+    }
+
+    
+} // HabitsViewController
     
 // MARK: - Delegate(ПОВЕДЕНИЕ)
 
 extension HabitsViewController: UITableViewDelegate {
 
-    func tableView(_ tableView: UITableView,
-                   heightForRowAt indexPath: IndexPath) -> CGFloat {
-        guard let section = Section(rawValue: indexPath.section) else { return 44 }
-
-            switch section {
-            case .progress:
-                return 80
-            case .habits:
-                return 44
-            }
-        
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        guard let section = Section(rawValue: indexPath.section) else { return UITableView.automaticDimension }
+        switch section {
+        case .progress:
+            return 80
+        case .habits:
+            return UITableView.automaticDimension
+        }
     }
 
-    func tableView(_ tableView: UITableView,
-                   didSelectRowAt indexPath: IndexPath) {
 
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         defer { tableView.deselectRow(at: indexPath, animated: true) }
 
         guard indexPath.section == Section.habits.rawValue else { return }
 
         let habit = HabitsStore.shared.habits[indexPath.row]
-        HabitsStore.shared.toggleTrackToday(habit)
-        tableView.reloadRows(at: [indexPath], with: .automatic)
-        
-        let progressIndexPath = IndexPath(row: 0, section: Section.progress.rawValue)
-        tableView.reloadRows(at: [progressIndexPath], with: .none)
-        
-        tableView.deselectRow(at: indexPath, animated: true)
-        
+        let vc = HabitDetailsViewController(habit: habit)
+        navigationController?.pushViewController(vc, animated: true)
     }
 
-}
+} // UITableViewDelegate
