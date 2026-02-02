@@ -14,6 +14,8 @@ final class HabitDetailsViewController: UIViewController {
     private let habit: Habit
     private let tableView = UITableView(frame: .zero, style: .insetGrouped)
     
+    private var dates: [Date] = []
+    
     // MARK: - Int
     
     init(habit: Habit) {
@@ -28,6 +30,7 @@ final class HabitDetailsViewController: UIViewController {
     // MARK: - Lifecycle
     
     override func viewDidLoad() {
+        
         super.viewDidLoad()
         
         title = habit.name
@@ -35,17 +38,35 @@ final class HabitDetailsViewController: UIViewController {
         
         setupTable()
         setupNavBar()
+        
+        dates = makeDates()
+        tableView.reloadData()
+        
+        navigationItem.largeTitleDisplayMode = .never
+        navigationController?.navigationBar.prefersLargeTitles = false
+        
     }
     
     // MARK: - Setup
     
     private func setupTable() {
-        view.addSubview(tableView)
-        tableView.frame = view.bounds
         
+        view.addSubview(tableView)
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        
+        NSLayoutConstraint.activate([
+                    tableView.topAnchor.constraint(equalTo: view.topAnchor),
+                    tableView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
+                    tableView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
+                    tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+                ])
+        
+        tableView.backgroundColor = .clear
         tableView.dataSource = self
+        tableView.delegate = self
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
-    }
+        
+    } // setupTable()
     
     private func setupNavBar() {
         navigationItem.rightBarButtonItem = UIBarButtonItem(
@@ -60,21 +81,68 @@ final class HabitDetailsViewController: UIViewController {
         print("Edit tapped")
     }
     
+    private func makeDates() -> [Date] {
+        
+        let calendar = Calendar.current
+        var result: [Date] = []
+        
+        for daysOffset in 1...365 {
+            if let date = calendar.date(byAdding: .day,
+                                        value: -daysOffset,
+                                        to: Date()) {
+                result.append(date)
+            }
+        }
+        return result
+        
+    }
+    
+    private func titleForDate(_ date: Date) -> String {
+            let calendar = Calendar.current
+
+            if calendar.isDateInYesterday(date) { return "Вчера" }
+
+            if let twoDaysAgo = calendar.date(byAdding: .day, value: -2, to: Date()),
+               calendar.isDate(date, inSameDayAs: twoDaysAgo) {
+                return "Позавчера"
+            }
+
+            let formatter = DateFormatter()
+            formatter.locale = Locale(identifier: "ru_RU")
+            formatter.dateFormat = "d MMMM yyyy"
+            return formatter.string(from: date)
+        }
+
+    
 } // HabitDetailsViewController
 
 extension HabitDetailsViewController: UITableViewDataSource, UITableViewDelegate {
     
     func tableView(_ tableView: UITableView,
                        numberOfRowsInSection section: Int) -> Int {
-            return 10 // временно, потом заменим на реальные даты
+        return dates.count
+        
         }
 
         func tableView(_ tableView: UITableView,
                        cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+            
 
             let cell = tableView.dequeueReusableCell(withIdentifier: "cell", for: indexPath)
-            cell.textLabel?.text = "Day \(indexPath.row)"
+            
+            let date = dates[indexPath.row]
+            cell.textLabel?.text = titleForDate(date)
+            
+            let isDone = HabitsStore.shared.habit(habit, isTrackedIn: date)
+            cell.accessoryType = isDone ? .checkmark : .none
             return cell
+            
         }
+    
+    func numberOfSections(in tableView: UITableView) -> Int { 1 }
+
+    func tableView(_ tableView: UITableView, titleForHeaderInSection section: Int) -> String? {
+        return "АКТИВНОСТЬ"
+    }
     
 }
