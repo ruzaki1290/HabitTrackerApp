@@ -78,7 +78,30 @@ final class HabitDetailsViewController: UIViewController {
     }
     
     @objc private func editTapped() {
-        print("Edit tapped")
+        let vc = CreateHabitViewController()
+         vc.habitNameToEdit = habit.name
+
+         vc.onSave = { [weak self] newName in
+             guard let self else { return }
+             self.habit.name = newName
+             self.title = newName
+             self.tableView.reloadData()
+         }
+        
+        // ✅ ВОТ СЮДА ДОБАВЬ:
+            vc.onDelete = { [weak self] in
+                guard let self else { return }
+
+                // удаляем привычку из хранилища
+                if let index = HabitsStore.shared.habits.firstIndex(where: { $0 === self.habit }) {
+                    HabitsStore.shared.habits.remove(at: index)
+                }
+
+                // после удаления уходим назад на список
+                self.navigationController?.popToRootViewController(animated: true)
+            }
+
+         navigationController?.pushViewController(vc, animated: true)
     }
     
     private func makeDates() -> [Date] {

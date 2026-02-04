@@ -48,6 +48,12 @@ final class HabitsViewController: UIViewController {
         
     } // viewDidLoad()
     
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
+
+        tableView.reloadData()
+    }
+    
     
     // MARK: - Setup
     
@@ -80,6 +86,7 @@ final class HabitsViewController: UIViewController {
         ])
         
     } // setupUI()
+
     
     // MARK: - Actions
     
@@ -194,10 +201,11 @@ extension HabitsViewController: UITableViewDataSource {
     
 } // HabitsViewController
     
-// MARK: - Delegate(ПОВЕДЕНИЕ)
+// MARK: - Delegate(ПОВЕДЕНИЕ ТАБЛИЦЫ)
 
 extension HabitsViewController: UITableViewDelegate {
 
+    // MARK: - Layout (Размеры ячеек)
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
         guard let section = Section(rawValue: indexPath.section) else { return UITableView.automaticDimension }
         switch section {
@@ -209,7 +217,9 @@ extension HabitsViewController: UITableViewDelegate {
     }
 
 
+    // MARK: - Navigation (переход в детали)
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        
         defer { tableView.deselectRow(at: indexPath, animated: true) }
 
         guard indexPath.section == Section.habits.rawValue else { return }
@@ -217,6 +227,25 @@ extension HabitsViewController: UITableViewDelegate {
         let habit = HabitsStore.shared.habits[indexPath.row]
         let vc = HabitDetailsViewController(habit: habit)
         navigationController?.pushViewController(vc, animated: true)
+        
+    }
+    
+    // MARK: - Actions (swipe actions /удаление)
+    func tableView(_ tableView: UITableView, trailingSwipeActionsConfigurationForRowAt indexPath: IndexPath) -> UISwipeActionsConfiguration? {
+        
+        guard indexPath.section == Section.habits.rawValue else { return nil }
+
+                let delete = UIContextualAction(style: .destructive, title: "Удалить") { _, _, completion in
+
+                    HabitsStore.shared.habits.remove(at: indexPath.row)
+
+                    tableView.deleteRows(at: [indexPath], with: .automatic)
+
+                    completion(true)
+                }
+        
+        return UISwipeActionsConfiguration(actions: [delete])
+
     }
 
 } // UITableViewDelegate
