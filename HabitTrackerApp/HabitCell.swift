@@ -15,7 +15,10 @@ final class HabitCell: UITableViewCell {
     private let titleLabel = UILabel()
     private let timeLabel = UILabel()
     private let counterLabel = UILabel()
-    private let statusImageView = UIImageView()
+    private let checkButton = UIButton(type: .system)
+    var onCheckTapped: (() -> Void)?
+    static let reuseID = "HabitCell"
+
     
     // MARK: - Init
     
@@ -31,27 +34,26 @@ final class HabitCell: UITableViewCell {
     
     // MARK: - Public
     
-    func configure(title: String,
-                       time: String,
-                       counter: Int,
-                       color: UIColor,
-                       isDone: Bool) {
+    func configure(with habit: Habit) {
+        titleLabel.text = habit.name
+        timeLabel.text = habit.dateString
+        counterLabel.text = "Счётчик: \(habit.trackDates.count)"
 
-            titleLabel.text = title
-            titleLabel.textColor = color
-
-            timeLabel.text = "Каждый день в \(time)"
-            counterLabel.text = "Счётчик: \(counter)"
-
-            if isDone {
-                statusImageView.image = UIImage(systemName: "checkmark.circle.fill")
-                statusImageView.tintColor = color
-            } else {
-                statusImageView.image = UIImage(systemName: "circle")
-                statusImageView.tintColor = color
-            }
-        
+        // кружок/галочка
+        if habit.isAlreadyTakenToday {
+            checkButton.backgroundColor = habit.color
+            checkButton.setImage(UIImage(systemName: "checkmark"), for: .normal)
+            checkButton.tintColor = .white
+            checkButton.layer.borderWidth = 0
+        } else {
+            checkButton.backgroundColor = .clear
+            checkButton.setImage(nil, for: .normal)
+            checkButton.tintColor = .clear
+            checkButton.layer.borderWidth = 2
+            checkButton.layer.borderColor = habit.color.cgColor
         }
+    }
+
     
     // MARK: - Setup
     
@@ -79,16 +81,19 @@ final class HabitCell: UITableViewCell {
            counterLabel.font = .systemFont(ofSize: 13, weight: .regular)
            counterLabel.textColor = .secondaryLabel
            counterLabel.numberOfLines = 1
-
-           statusImageView.translatesAutoresizingMaskIntoConstraints = false
-           statusImageView.contentMode = .scaleAspectFit
+        
+           checkButton.layer.cornerRadius = 20
+           checkButton.layer.borderWidth = 2
+           checkButton.translatesAutoresizingMaskIntoConstraints = false
 
            contentView.addSubview(cardView)
            cardView.addSubview(titleLabel)
            cardView.addSubview(timeLabel)
            cardView.addSubview(counterLabel)
-           cardView.addSubview(statusImageView)
+           cardView.addSubview(checkButton)
         
+           checkButton.addTarget(self, action: #selector(checkTapped), for: .touchUpInside)
+
        }
     
     private func setupConstraints() {
@@ -100,14 +105,9 @@ final class HabitCell: UITableViewCell {
                 cardView.trailingAnchor.constraint(equalTo: contentView.trailingAnchor, constant: -16),
                 cardView.bottomAnchor.constraint(equalTo: contentView.bottomAnchor, constant: -8),
 
-                statusImageView.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -16),
-                statusImageView.centerYAnchor.constraint(equalTo: cardView.centerYAnchor),
-                statusImageView.widthAnchor.constraint(equalToConstant: 36),
-                statusImageView.heightAnchor.constraint(equalToConstant: 36),
-
                 titleLabel.topAnchor.constraint(equalTo: cardView.topAnchor, constant: 16),
                 titleLabel.leadingAnchor.constraint(equalTo: cardView.leadingAnchor, constant: 16),
-                titleLabel.trailingAnchor.constraint(equalTo: statusImageView.leadingAnchor, constant: -12),
+                titleLabel.trailingAnchor.constraint(equalTo: checkButton.leadingAnchor, constant: -12),
 
                 timeLabel.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 6),
                 timeLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
@@ -116,10 +116,19 @@ final class HabitCell: UITableViewCell {
                 counterLabel.topAnchor.constraint(equalTo: timeLabel.bottomAnchor, constant: 14),
                 counterLabel.leadingAnchor.constraint(equalTo: titleLabel.leadingAnchor),
                 counterLabel.trailingAnchor.constraint(equalTo: titleLabel.trailingAnchor),
-                counterLabel.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -16)
+                counterLabel.bottomAnchor.constraint(equalTo: cardView.bottomAnchor, constant: -16),
+                
+                checkButton.trailingAnchor.constraint(equalTo: cardView.trailingAnchor, constant: -16),
+                checkButton.centerYAnchor.constraint(equalTo: cardView.centerYAnchor),
+                checkButton.widthAnchor.constraint(equalToConstant: 40),
+                checkButton.heightAnchor.constraint(equalToConstant: 40)
                 
             ])
         
         }
+    
+    @objc private func checkTapped() {
+        onCheckTapped?()
+    }
     
 } // HabitCell
