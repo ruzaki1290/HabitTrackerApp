@@ -81,14 +81,16 @@ final class HabitDetailsViewController: UIViewController {
         let vc = CreateHabitViewController()
          vc.habitNameToEdit = habit.name
 
-         vc.onSave = { [weak self] newName in
+        vc.onSave = { [weak self] newName, newColor, newDate in
              guard let self else { return }
              self.habit.name = newName
+             self.habit.color = newColor
+             self.habit.date = newDate
              self.title = newName
+             HabitsStore.shared.save()
              self.tableView.reloadData()
          }
         
-        // ✅ ВОТ СЮДА ДОБАВЬ:
             vc.onDelete = { [weak self] in
                 guard let self else { return }
 

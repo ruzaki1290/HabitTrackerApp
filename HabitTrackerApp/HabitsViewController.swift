@@ -94,17 +94,11 @@ final class HabitsViewController: UIViewController {
         
         let vc = CreateHabitViewController()
         
-        vc.onSave = { [weak self] title in
+        vc.onSave = { [weak self] name, color, date in
                 guard let self else { return }
-            
-                let trimmed = title.trimmingCharacters(in: .whitespacesAndNewlines)
-                guard !trimmed.isEmpty else { return }
-
-                let habit = Habit(name: trimmed, date: Date(), color: .systemBlue)
+                let habit = Habit(name: name, date: date, color: color)
                 HabitsStore.shared.habits.append(habit)
-
                 self.tableView.reloadData()
-                self.dismiss(animated: true)
             }
 
         
